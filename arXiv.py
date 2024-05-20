@@ -2,7 +2,8 @@
 #
 # Author: Indrajit Ghosh
 #
-# Date: Nov 12, 2021
+# Created On: Nov 12, 2021
+# Modified On: May 20, 2024
 #
 
 import requests, pprint, os
@@ -54,11 +55,29 @@ def display_categories():
     print()
 
 
-def get_current_month_papers(category_index="1"):
+def display_paper_on_terminal(title, authors, abstract_link, pdf_link, index=None):
+    sp = "    "
+    index = '-' if index is None else index
+    arxiv_link = "arXiv:" + abstract_link.lstrip("https://arxiv.org/abs/")
+
+    print()
+    print(f"[{index}] {arxiv_link}")
+    print(sp, "Title: ", title)
+    print(sp, "Author(s): ", authors)
+    print()
+    print(sp, f" - Abstract link: {abstract_link}")
+    print(sp, f" - PDF link: {pdf_link}")
+
+    print("." * 50)
+    print("." * 80)
+
+
+
+def get_current_month_papers(category_index="1", option="c"):
 
     category = ARXIV_CATEGORIES[category_index]
     category_code = category['code']
-    category_option = OPTIONS['c']
+    category_option = OPTIONS[option]
 
     category_url = ARXIV + "/list/" + category_code + "/" + category_option
 
@@ -66,33 +85,20 @@ def get_current_month_papers(category_index="1"):
     res.raise_for_status()
 
     soup = BeautifulSoup(res.text, "html.parser")
-    list_of_papers = soup.find("div", id="dlpage").dl.findAll("span", class_="list-identifier")
+    articles = soup.find("div", id="dlpage").find("dl", id="articles").findAll("dt")
     list_of_infos = soup.find("div", id="dlpage").dl.findAll("div", class_="meta")
 
+    i = 1
+    for paper, paper_info in zip(articles, list_of_infos):
 
-    for paper, paper_info in zip(list_of_papers, list_of_infos):
-
-        pdf_link = ARXIV + paper.findAll('a')[1]['href']
-        title = paper_info.find("div", class_="list-title mathjax").get_text().strip()
+        links = paper.findAll('a')[1:5]
+        abstract_link, pdf_link, ps_link, html_link = [ARXIV + link['href'] for link in links]
+        title = paper_info.find("div", class_="list-title mathjax").get_text().lstrip("Title:").strip()
         authors = paper_info.find("div", class_="list-authors").get_text().strip()
-        
-        print()
-        print(title)
-        print()
-        print(authors)
-        print(f"\n - Pdf link: {pdf_link}")
 
-        print("." * 50)
-        print("." * 80)
-        
+        display_paper_on_terminal(title=title, authors=authors, abstract_link=abstract_link, pdf_link=pdf_link, index=i)
 
-
-def get_recent_papers(category_index="1"):
-    pass
-
-
-def get_new_papers(category_index="1"):
-    pass
+        i += 1
 
 
 def main():

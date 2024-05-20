@@ -12,7 +12,7 @@ def show_results(entries):
     print()
 
     print('-' * 50)
-
+    count = 1
     for entry in entries:
         print('.'*80)
 
@@ -26,20 +26,21 @@ def show_results(entries):
             auth_str += auth.find('name').text + ', '
         auth_str = auth_str[:-2]
 
-        pdf_link = str(entry.select('link')[1])[11:].split('rel=')[0]
-
-        print(f'\nTitle: {title}')
-        print(f'\nPublished date: {published}')
-        print(f'\nAuthor(s): {auth_str}')
-        print(f'\nPdf link: {pdf_link}')
-
+        pdf_link = str(entry.select('link')[1])[11:].split('rel=')[0].lstrip('"')[:-2]
+        arxiv_link = "arXiv:" + pdf_link.lstrip("http://arxiv.org/pdf/")
+        print(f"[{count}] {arxiv_link}")
+        print(f'\n    Title: {title}')
+        print(f'    Author(s): {auth_str}')
+        print(f'    Published date: {published}')
         print()
-        print('.' * 60)
-        print('\n\n')
+        print(f'    PDF link: {pdf_link}')
+
+        # print('.' * 60)
+        print('\n')
+        count += 1
 
 
-
-if __name__ == '__main__':
+def main():
 
     os.system('clear')
 
@@ -61,19 +62,20 @@ if __name__ == '__main__':
     # query = f'search_query={search_query}&start={start}&max_results={max_results}&sortBy={sortBy}&sortOrder={sortOrder}'
 
     url = base_url + query
+    print(url)
 
     res = requests.get(url)
     res.raise_for_status()
     
-    soup = bs4.BeautifulSoup(res.text, 'html.parser')
+    soup = bs4.BeautifulSoup(res.text, "html.parser")
 
     # Entries
     entries = soup.findAll('entry')
 
     show_results(entries)
 
-
     
-
+if __name__ == '__main__':
+    main()
 
     
